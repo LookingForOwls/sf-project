@@ -1,0 +1,89 @@
+---
+- name: Install Nethermind dependencies
+  ansible.builtin.package:
+    name:
+      - unzip
+    state: present
+
+- name: Ensure user exists - "{{ nm_user }}"
+  ansible.builtin.user:
+    name: "{{ nm_user }}"
+    shell: /bin/false
+    password:
+    system: true
+
+- name: Ensure Nethermind directory present - "{{ nm_dir }}"
+  ansible.builtin.file:
+    path: "{{ nm_dir }}"
+    owner: "{{ nm_user }}"
+    group: "{{ nm_user }}"
+    state: directory
+    mode: "0770"
+
+- name: Check if Nethermind executable exists
+  ansible.builtin.stat:
+    path: "{{ nm_dir }}/current/nethermind"
+  register: nethermind_executable
+
+- name: Nethermind version checking and updating tasks
+  when: nethermind_executable.stat.exists
+  block:
+    - name: Run Nethermind version command
+      ansible.builtin.command: "{{ nm_dir }}/current/nethermind -v"
+      register: nethermind_version_output
+      changed_when: nethermind_version_output.rc != 0
+
+    - name: Extract version number
+      ansible.builtin.set_fact:
+        current_version: "{{ nethermind_version_output.stdout | regex_search('Version: ([0-9.]+)', '\\1') | first }}"
+      when: nethermind_version_output is defined and nethermind_version_output.rc == 0
+
+    - name: Display current version
+      ansible.builtin.debug:
+        msg: "Current Nethermind version: {{ current_version | default('Not available') }}"
+
+    - name: Check if update is needed
+      ansible.builtin.set_fact:
+        update_needed: "{{ current_version != nm_version }}"
+
+    - name: Update Nethermind
+      when: update_needed | default(false)
+      block:
+        - name: Download nethermind binary from nethermind.io
+          ansible.builtin.get_url:
+            url: "https://nethdev.blob.core.windows.net/builds/nethermind-{{ nm_version }}-{{ nm_git_hash }}-linux-x64.zip"
+            dest: "/tmp/nethermind-{{ nm_version }}-{{ nm_git_hash }}-linux-x64.zip"
+            mode: "0775"
+
+        - name: Verify package signature
+          ansible.builtin.script: >
+            ./scripts/package_signature_verification.sh -f /tmp/nethermind-{{ nm_version }}-{{ nm_git_hash }}-linux-x64.zip
+            -sl "https://nethdev.blob.core.windows.net/builds/nethermind-{{ nm_version }}-{{ nm_git_hash }}-linux-x64.zip.asc"
+            -k {{ key.nethermind_mateusz }}
+
+        - name: Create install directory
+          ansible.builtin.file:
+            path: "{{ nm_dir }}/nethermind-{{ nm_version }}-{{ nm_git_hash }}"
+            owner: "{{ nm_user }}"
+            group: "{{ nm_user }}"
+            state: directory
+            mode: "0770"
+
+        - name: Install Nethermind
+          ansible.builtin.unarchive:
+            src: "/tmp/nethermind-{{ nm_version }}-{{ nm_git_hash }}-linux-x64.zip"
+            dest: "{{ nm_dir }}/nethermind-{{ nm_version }}-{{ nm_git_hash }}"
+            owner: "{{ nm_user }}"
+            group: "{{ nm_user }}"
+            mode: '0750'
+            remote_src: true
+
+        - name: Create symlink to current version
+          ansible.builtin.file:
+            src: "{{ nm_dir }}/nethermind-{{ nm_version }}-{{ nm_git_hash }}/"
+            dest: "{{ nm_dir }}/current"
+            state: link
+
+        - name: Display install message
+          ansible.builtin.debug:
+            msg: "Nethermind installed: Version {{ nm_version }}-{{ nm_git_hash }}"

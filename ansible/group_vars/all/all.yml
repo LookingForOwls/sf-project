@@ -1,0 +1,9 @@
+---
+# Nethermind
+nm_user: nethermind
+nm_dir: "/opt/nethermind"
+
+# GPG Keys
+key:
+  nethermind_mateusz: EECCEA1473108E3222D76722D39BE1DDCB6DA407
+

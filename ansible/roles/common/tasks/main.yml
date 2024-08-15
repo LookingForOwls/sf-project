@@ -19,15 +19,6 @@
   when: not fullupdate.stat.exists
   tags: update-packages
   block:
-    - name: Remove unused packages
-      ansible.builtin.apt:
-        pkg:
-          - exim4
-          - exim4-base
-          - exim4-config
-          - exim4-daemon-light
-        state: absent
-
     - name: Update all system packages
       ansible.builtin.apt:
         name: "*"
@@ -71,10 +62,3 @@
     key: "{{ lookup('file', 'lfo.pub') }}"
   tags: ssh
 
-- name: Ensure LFO User Setup
-  ansible.builtin.user:
-    name: lfo
-    shell: /bin/bash
-    groups: "{{ common_user_groups | join(',') }}"
-    password: "{{ common_lfo_password }}"
-  tags: user
