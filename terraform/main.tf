@@ -23,20 +23,14 @@ resource "digitalocean_project" "sf_project" {
 }
 
 # Tags
-resource "digitalocean_tag" "sf" {
-  name = "sf"
+variable "tags" {
+  type    = set(string)
+  default = ["sf", "holesky", "holesky-el", "holesky-cl"]
 }
 
-resource "digitalocean_tag" "holesky" {
-  name = "holesky"
-}
-
-resource "digitalocean_tag" "holesky-el" {
-  name = "holesky-el"
-}
-
-resource "digitalocean_tag" "holesky-cl" {
-  name = "holesky-cl"
+resource "digitalocean_tag" "tags" {
+  for_each = var.tags
+  name     = each.value
 }
 
 # VPC
@@ -47,30 +41,17 @@ resource "digitalocean_vpc" "sf_vpc" {
   description = "SF VPC"
 }
 
-# Volumes
-resource "digitalocean_volume" "cl_vol" {
-  region      = "fra1"
-  name        = "cl-vol"
-  size        = 200
-  description = "SF Concensus Client Volume"
-  tags        = [digitalocean_tag.sf.id]
-}
-
-resource "digitalocean_volume" "el_vol" {
-  region      = "fra1"
-  name        = "el-vol"
-  size        = 200
-  description = "SF Execution Client Volume"
-  tags        = [digitalocean_tag.sf.id]
-}
-
 # Droplets
 module "holesky_cl_droplet" {
   source     = "./modules/node_generic"
   name       = "holesky-cl01"
   vpc_uuid   = digitalocean_vpc.sf_vpc.id
   project_id = digitalocean_project.sf_project.id
-  tag_ids    = [digitalocean_tag.sf.id, digitalocean_tag.holesky-cl.id, digitalocean_tag.holesky.id]
+  tag_ids    = [
+    digitalocean_tag.tags["sf"].id,
+    digitalocean_tag.tags["holesky"].id,
+    digitalocean_tag.tags["holesky-cl"].id
+  ]
   # SSH
   lfo_ssh_key_id    = data.digitalocean_ssh_key.lfo_ssh_key.public_key
   ssh_config        = file("${path.module}/config_files/ssh/standard.conf")
@@ -83,22 +64,38 @@ module "holesky_el_droplet" {
   name       = "holesky-el01"
   vpc_uuid   = digitalocean_vpc.sf_vpc.id
   project_id = digitalocean_project.sf_project.id
-  tag_ids    = [digitalocean_tag.sf.id, digitalocean_tag.holesky-el.id, digitalocean_tag.holesky.id]
-  # SSH
+  tag_ids    = [
+    digitalocean_tag.tags["sf"].id,
+    digitalocean_tag.tags["holesky"].id,
+    digitalocean_tag.tags["holesky-el"].id
+  ]
+   # SSH
   lfo_ssh_key_id    = data.digitalocean_ssh_key.lfo_ssh_key.public_key
   ssh_config        = file("${path.module}/config_files/ssh/standard.conf")
   # Set initial user password
   user_deploy_hash = var.user_deploy_hash
 }
 
-# Attach Volumes
-resource "digitalocean_volume_attachment" "cl-client" {
-  droplet_id = module.holesky_cl_droplet.droplet_id
-  volume_id  = digitalocean_volume.cl_vol.id
+# Volumes and Attachments
+resource "digitalocean_volume" "holesky_vols" {
+  for_each = {
+    "holesky-cl01-vol" = "SF Consensus Client Volume"
+    "holesky-el01-vol" = "SF Execution Client Volume"
+  }
+  region      = "fra1"  # Make sure this matches your droplets' region
+  name        = each.key
+  size        = 200
+  description = each.value
+  tags        = [digitalocean_tag.tags["sf"].id]
 }
 
-resource "digitalocean_volume_attachment" "el-client" {
-  droplet_id = module.holesky_el_droplet.droplet_id
-  volume_id  = digitalocean_volume.el_vol.id
+# Volume Attachments
+resource "digitalocean_volume_attachment" "holesky_cl_attachment" {
+  droplet_id = module.holesky_cl_droplet.droplet_id  # Changed from id to droplet_id
+  volume_id  = digitalocean_volume.holesky_vols["holesky-cl01-vol"].id
 }
 
+resource "digitalocean_volume_attachment" "holesky_el_attachment" {
+  droplet_id = module.holesky_el_droplet.droplet_id  # Changed from id to droplet_id
+  volume_id  = digitalocean_volume.holesky_vols["holesky-el01-vol"].id
+}
