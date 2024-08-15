@@ -1,0 +1,22 @@
+#cloud-config
+
+users:
+  - default
+  - name: lfo
+    shell: /bin/bash
+    groups: sudo
+    sudo: ['ALL=(ALL) ALL']
+    lock_passwd: false
+    passwd: "${user_deploy_hash}"
+    ssh-authorized-keys:
+      - ${lfo_ssh_key}
+
+write_files:
+  # Set SSH Config
+  - path: /etc/ssh/sshd_config.d/00-standard.conf
+    permissions: '0644'
+    owner: root:root
+    content: |
+      %{ for line in split("\n", ssh_config) ~}
+      ${line}
+      %{ endfor ~}
