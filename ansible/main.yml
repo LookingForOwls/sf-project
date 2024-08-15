@@ -1,0 +1,30 @@
+---
+- name: Initial Setup
+  gather_facts: true
+  hosts: all
+  become: true
+  roles:
+    - common
+  tags:
+    - common
+
+# Setup Nimbus on CL VM using Consensys role
+# Default to one version back for upgrade testing
+- name: Setup Nimbus
+  gather_facts: true
+  hosts: holesky-cl01
+  roles: 
+    - consensys.nimbus
+  vars:
+    nimbus_version: v24.6.0
+    nimbus_git_hash: 7d00786
+    nimbus_network: holesky
+    nimbus_data_dir:
+
+# Setup Nethermind on EL VM using local role
+# Default to one version back for upgrade testing
+- name: Setup Nethermind
+  gather_facts: true
+  hosts: holesky-ce01
+  roles: 
+    - nethermind

@@ -1,0 +1,80 @@
+---
+- name: Setup root account properly
+  ansible.builtin.lineinfile:
+    backup: true
+    dest: /etc/shadow
+    regexp: ^root:.*$
+    state: present
+    line: "root:*:16231:0:99999:7:::"
+
+- name: Check if all packages have been previously updated
+  register: fullupdate
+  ansible.builtin.stat:
+    path: /tmp/ansible_initial_apt_update
+  tags: update-packages
+
+# Retries used here as APT has a tendency to fail.
+# Should only run full update once.
+- name: Update all packages and install common packages on first setup
+  when: not fullupdate.stat.exists
+  tags: update-packages
+  block:
+    - name: Remove unused packages
+      ansible.builtin.apt:
+        pkg:
+          - exim4
+          - exim4-base
+          - exim4-config
+          - exim4-daemon-light
+        state: absent
+
+    - name: Update all system packages
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
+        update_cache: true
+        only_upgrade: true
+      register: update_packages
+      until: update_packages is not failed
+      retries: 3
+
+    - name: Set update file if 'apt update' was run
+      ansible.builtin.file:
+        path: /tmp/ansible_initial_apt_update
+        state: touch
+        owner: root
+        group: root
+        mode: "0644"
+
+    # Chrony may improve attestation performance vs NTP
+    - name: Install chrony
+      ansible.builtin.apt:
+        pkg:
+          - chrony
+        state: present
+      tags: ntp
+
+    - name: Update chrony config
+      ansible.builtin.copy:
+        src: chrony.conf
+        dest: /etc/chrony/chrony.conf
+        owner: root
+        group: root
+        mode: "0644"
+      tags: ntp
+      notify: Restart chrony
+
+- name: Ensure LFO SSH Key Deployed
+  ansible.posix.authorized_key:
+    user: lfo
+    state: present
+    key: "{{ lookup('file', 'lfo.pub') }}"
+  tags: ssh
+
+- name: Ensure LFO User Setup
+  ansible.builtin.user:
+    name: lfo
+    shell: /bin/bash
+    groups: "{{ common_user_groups | join(',') }}"
+    password: "{{ common_lfo_password }}"
+  tags: user
