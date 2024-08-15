@@ -23,8 +23,8 @@ resource "digitalocean_project" "sf_project" {
 }
 
 # Tags
-resource "digitalocean_tag" "prod" {
-  name = "prod"
+resource "digitalocean_tag" "sf" {
+  name = "sf"
 }
 
 resource "digitalocean_tag" "holesky" {
@@ -53,7 +53,7 @@ resource "digitalocean_volume" "cl_vol" {
   name        = "cl-vol"
   size        = 200
   description = "SF Concensus Client Volume"
-  tags        = [digitalocean_tag.prod.id]
+  tags        = [digitalocean_tag.sf.id]
 }
 
 resource "digitalocean_volume" "el_vol" {
@@ -61,7 +61,7 @@ resource "digitalocean_volume" "el_vol" {
   name        = "el-vol"
   size        = 200
   description = "SF Execution Client Volume"
-  tags        = [digitalocean_tag.prod.id]
+  tags        = [digitalocean_tag.sf.id]
 }
 
 # Droplets
@@ -70,7 +70,7 @@ module "holesky_cl_droplet" {
   name       = "holesky-cl01"
   vpc_uuid   = digitalocean_vpc.sf_vpc.id
   project_id = digitalocean_project.sf_project.id
-  tag_ids    = [digitalocean_tag.prod.id, digitalocean_tag.holesky-cl.id, digitalocean_tag.holesky.id]
+  tag_ids    = [digitalocean_tag.sf.id, digitalocean_tag.holesky-cl.id, digitalocean_tag.holesky.id]
   # SSH
   lfo_ssh_key_id    = data.digitalocean_ssh_key.lfo_ssh_key.public_key
   ssh_config        = file("${path.module}/config_files/ssh/standard.conf")
@@ -83,7 +83,7 @@ module "holesky_el_droplet" {
   name       = "holesky-el01"
   vpc_uuid   = digitalocean_vpc.sf_vpc.id
   project_id = digitalocean_project.sf_project.id
-  tag_ids    = [digitalocean_tag.prod.id, digitalocean_tag.holesky-el.id, digitalocean_tag.holesky.id]
+  tag_ids    = [digitalocean_tag.sf.id, digitalocean_tag.holesky-el.id, digitalocean_tag.holesky.id]
   # SSH
   lfo_ssh_key_id    = data.digitalocean_ssh_key.lfo_ssh_key.public_key
   ssh_config        = file("${path.module}/config_files/ssh/standard.conf")
