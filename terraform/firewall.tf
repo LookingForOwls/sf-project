@@ -37,8 +37,8 @@ locals {
   # Defines common inbound rules for accessing the servers
   common_inbound_rules = [
     {
-      protocol           = "tcp"
-      port_range         = "22" # SSH for secure remote administration
+      protocol         = "tcp"
+      port_range       = "22"             # SSH for secure remote administration
       source_addresses = ["38.69.197.57"] # Limit SSH to allowlisted IP only. 
     }
   ]
@@ -62,30 +62,30 @@ resource "digitalocean_firewall" "holesky-cl" {
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
   outbound_rule {
-    protocol         = "tcp"
-    port_range       = "9000"
+    protocol              = "tcp"
+    port_range            = "9000"
     destination_addresses = ["0.0.0.0/0", "::/0"]
   }
   outbound_rule {
-    protocol         = "udp"
-    port_range       = "9000"
+    protocol              = "udp"
+    port_range            = "9000"
     destination_addresses = ["0.0.0.0/0", "::/0"]
   }
 
   # Outbound to execution client
   outbound_rule {
-    protocol         = "tcp"
-    port_range       = "8551"
-    destination_droplet_ids = [ module.holesky_el_droplet.droplet_id ]
+    protocol                = "tcp"
+    port_range              = "8551"
+    destination_droplet_ids = [module.holesky_el_droplet.droplet_id]
   }
 
   # Common Inbound
   dynamic "inbound_rule" {
     for_each = local.common_inbound_rules
     content {
-      protocol           = inbound_rule.value.protocol
-      port_range         = inbound_rule.value.port_range
-      source_addresses   = inbound_rule.value.source_addresses
+      protocol         = inbound_rule.value.protocol
+      port_range       = inbound_rule.value.port_range
+      source_addresses = inbound_rule.value.source_addresses
     }
   }
 
@@ -119,30 +119,30 @@ resource "digitalocean_firewall" "holesky-el" {
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
   outbound_rule {
-    protocol         = "tcp"
-    port_range       = "30303"
+    protocol              = "tcp"
+    port_range            = "30303"
     destination_addresses = ["0.0.0.0/0", "::/0"]
   }
   outbound_rule {
-    protocol         = "udp"
-    port_range       = "30303"
+    protocol              = "udp"
+    port_range            = "30303"
     destination_addresses = ["0.0.0.0/0", "::/0"]
   }
 
   # Inbound from consensus client
   inbound_rule {
-    protocol         = "tcp"
-    port_range       = "8551"
-    source_droplet_ids = [ module.holesky_cl_droplet.droplet_id ]
+    protocol           = "tcp"
+    port_range         = "8551"
+    source_droplet_ids = [module.holesky_cl_droplet.droplet_id]
   }
 
   # Common Inbound
   dynamic "inbound_rule" {
     for_each = local.common_inbound_rules
     content {
-      protocol           = inbound_rule.value.protocol
-      port_range         = inbound_rule.value.port_range
-      source_addresses   = inbound_rule.value.source_addresses
+      protocol         = inbound_rule.value.protocol
+      port_range       = inbound_rule.value.port_range
+      source_addresses = inbound_rule.value.source_addresses
     }
   }
 

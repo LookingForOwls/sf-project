@@ -69,7 +69,7 @@
 
 - name: Set default values
   ansible.builtin.set_fact:
-    current_version: "not installed"
+    current_version: not installed
     update_needed: true
 
 - name: Nethermind version checking tasks
@@ -98,8 +98,8 @@
   block:
     - name: Download nethermind binary from nethermind.io
       ansible.builtin.get_url:
-        url: "https://nethdev.blob.core.windows.net/builds/nethermind-{{ nm_version }}-{{ nm_git_hash }}-linux-x64.zip"
-        dest: "/tmp/nethermind-{{ nm_version }}-{{ nm_git_hash }}-linux-x64.zip"
+        url: https://nethdev.blob.core.windows.net/builds/nethermind-{{ nm_version }}-{{ nm_git_hash }}-linux-x64.zip
+        dest: /tmp/nethermind-{{ nm_version }}-{{ nm_git_hash }}-linux-x64.zip
         mode: "0775"
 
     - name: Verify package signature
@@ -118,11 +118,11 @@
 
     - name: Install Nethermind
       ansible.builtin.unarchive:
-        src: "/tmp/nethermind-{{ nm_version }}-{{ nm_git_hash }}-linux-x64.zip"
+        src: /tmp/nethermind-{{ nm_version }}-{{ nm_git_hash }}-linux-x64.zip
         dest: "{{ nm_dir }}/nethermind-{{ nm_version }}-{{ nm_git_hash }}"
         owner: "{{ nm_user }}"
         group: "{{ nm_user }}"
-        mode: '0750'
+        mode: "0750"
         remote_src: true
 
     - name: Stop Nethermind service if present
