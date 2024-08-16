@@ -47,14 +47,14 @@ module "holesky_cl_droplet" {
   name       = "holesky-cl01"
   vpc_uuid   = digitalocean_vpc.sf_vpc.id
   project_id = digitalocean_project.sf_project.id
-  tag_ids    = [
+  tag_ids = [
     digitalocean_tag.tags["sf"].id,
     digitalocean_tag.tags["holesky"].id,
     digitalocean_tag.tags["holesky-cl"].id
   ]
   # SSH
-  lfo_ssh_key_id    = data.digitalocean_ssh_key.lfo_ssh_key.public_key
-  ssh_config        = file("${path.module}/config_files/ssh/standard.conf")
+  lfo_ssh_key_id = data.digitalocean_ssh_key.lfo_ssh_key.public_key
+  ssh_config     = file("${path.module}/config_files/ssh/standard.conf")
   # Set initial user password
   user_deploy_hash = var.user_deploy_hash
 }
@@ -64,14 +64,14 @@ module "holesky_el_droplet" {
   name       = "holesky-el01"
   vpc_uuid   = digitalocean_vpc.sf_vpc.id
   project_id = digitalocean_project.sf_project.id
-  tag_ids    = [
+  tag_ids = [
     digitalocean_tag.tags["sf"].id,
     digitalocean_tag.tags["holesky"].id,
     digitalocean_tag.tags["holesky-el"].id
   ]
-   # SSH
-  lfo_ssh_key_id    = data.digitalocean_ssh_key.lfo_ssh_key.public_key
-  ssh_config        = file("${path.module}/config_files/ssh/standard.conf")
+  # SSH
+  lfo_ssh_key_id = data.digitalocean_ssh_key.lfo_ssh_key.public_key
+  ssh_config     = file("${path.module}/config_files/ssh/standard.conf")
   # Set initial user password
   user_deploy_hash = var.user_deploy_hash
 }
@@ -82,7 +82,7 @@ resource "digitalocean_volume" "holesky_vols" {
     "holesky-cl01-vol" = "SF Consensus Client Volume"
     "holesky-el01-vol" = "SF Execution Client Volume"
   }
-  region      = "fra1"  # Make sure this matches your droplets' region
+  region      = "fra1" # Make sure this matches your droplets' region
   name        = each.key
   size        = 200
   description = each.value
@@ -91,11 +91,11 @@ resource "digitalocean_volume" "holesky_vols" {
 
 # Volume Attachments
 resource "digitalocean_volume_attachment" "holesky_cl_attachment" {
-  droplet_id = module.holesky_cl_droplet.droplet_id  # Changed from id to droplet_id
+  droplet_id = module.holesky_cl_droplet.droplet_id
   volume_id  = digitalocean_volume.holesky_vols["holesky-cl01-vol"].id
 }
 
 resource "digitalocean_volume_attachment" "holesky_el_attachment" {
-  droplet_id = module.holesky_el_droplet.droplet_id  # Changed from id to droplet_id
+  droplet_id = module.holesky_el_droplet.droplet_id
   volume_id  = digitalocean_volume.holesky_vols["holesky-el01-vol"].id
 }
