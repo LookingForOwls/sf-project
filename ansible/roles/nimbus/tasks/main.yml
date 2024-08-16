@@ -1,0 +1,22 @@
+---
+# The consensus.nimbus role normally handles this but I want the user to exist prior
+# to copying the JWT secret. These options are also slightly more restrictive.
+- name: Ensure user exists - "{{ nimbus_user }}"
+  ansible.builtin.user:
+    name: "{{ nimbus_user }}"
+    shell: /bin/false
+    password:
+    system: true
+
+# Encrypted in vault for simplicy, would be better to use AWS Secret Manager or HC Vault
+- name: Write JWT secret to keystore directory
+  ansible.builtin.copy:
+    content: "{{ jwt_secret }}"
+    dest: /etc/jwt-secret-ansible.hex
+    owner: "{{ nimbus_user }}"
+    group: "{{ nimbus_user }}"
+    mode: "0600"
+
+- name: Run consensys.nimbus role
+  ansible.builtin.include_role:
+    name: consensys.nimbus

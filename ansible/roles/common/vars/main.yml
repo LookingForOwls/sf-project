@@ -1,0 +1,4 @@
+---
+common_user_groups:
+  - sudo
+  - systemd-journal

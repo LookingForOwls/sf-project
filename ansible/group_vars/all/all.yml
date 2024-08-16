@@ -1,0 +1,8 @@
+---
+nm_rpc_port: 8545
+nm_consensus_port: 8551
+
+# GPG Keys
+key:
+  nethermind_mateusz: EECCEA1473108E3222D76722D39BE1DDCB6DA407
+
