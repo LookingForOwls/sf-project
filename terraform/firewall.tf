@@ -50,6 +50,35 @@ resource "digitalocean_firewall" "holesky-cl" {
 
   droplet_ids = [module.holesky_cl_droplet.droplet_id]
 
+  # Nethermind Peers
+  inbound_rule {
+    protocol         = "tcp"
+    port_range       = "9000"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  inbound_rule {
+    protocol         = "udp"
+    port_range       = "9000"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  outbound_rule {
+    protocol         = "tcp"
+    port_range       = "9000"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  outbound_rule {
+    protocol         = "udp"
+    port_range       = "9000"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }
+
+  # Outbound to execution client
+  outbound_rule {
+    protocol         = "tcp"
+    port_range       = "8551"
+    destination_droplet_ids = [ module.holesky_el_droplet.droplet_id ]
+  }
+
   # Common Inbound
   dynamic "inbound_rule" {
     for_each = local.common_inbound_rules
@@ -77,6 +106,35 @@ resource "digitalocean_firewall" "holesky-el" {
   name = "holesky-el-firewall"
 
   droplet_ids = [module.holesky_el_droplet.droplet_id]
+
+  # Nethermind External Peers
+  inbound_rule {
+    protocol         = "tcp"
+    port_range       = "30303"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  inbound_rule {
+    protocol         = "udp"
+    port_range       = "30303"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  outbound_rule {
+    protocol         = "tcp"
+    port_range       = "30303"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  outbound_rule {
+    protocol         = "udp"
+    port_range       = "30303"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }
+
+  # Inbound from consensus client
+  inbound_rule {
+    protocol         = "tcp"
+    port_range       = "8551"
+    source_droplet_ids = [ module.holesky_cl_droplet.droplet_id ]
+  }
 
   # Common Inbound
   dynamic "inbound_rule" {
