@@ -91,11 +91,11 @@ resource "digitalocean_volume" "holesky_vols" {
 
 # Volume Attachments
 resource "digitalocean_volume_attachment" "holesky_cl_attachment" {
-  droplet_id = module.holesky_cl_droplet.droplet_id # Changed from id to droplet_id
+  droplet_id = module.holesky_cl_droplet.droplet_id
   volume_id  = digitalocean_volume.holesky_vols["holesky-cl01-vol"].id
 }
 
 resource "digitalocean_volume_attachment" "holesky_el_attachment" {
-  droplet_id = module.holesky_el_droplet.droplet_id # Changed from id to droplet_id
+  droplet_id = module.holesky_el_droplet.droplet_id
   volume_id  = digitalocean_volume.holesky_vols["holesky-el01-vol"].id
 }
