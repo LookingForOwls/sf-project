@@ -62,3 +62,10 @@
     key: "{{ lookup('file', 'lfo.pub') }}"
   tags: ssh
 
+- name: Ensure LFO User Setup
+  ansible.builtin.user:
+    name: lfo
+    shell: /bin/bash
+    groups: "{{ common_user_groups | join(',') }}"
+    password: "{{ common_lfo_password }}"
+  tags: user

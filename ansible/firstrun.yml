@@ -1,0 +1,16 @@
+---
+# - name: Harden Servers
+#   gather_facts: true
+#   become: true
+#   hosts: all
+#   vars:
+#     os_security_kernel_enable_module_loading: false
+#   roles:
+#     - devsec.hardening.os_hardening
+
+- name: Setup Password and Common Packages
+  gather_facts: true
+  become: true
+  hosts: all
+  roles:
+    - common

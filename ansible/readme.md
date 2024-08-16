@@ -34,12 +34,12 @@
 
     The `pass` vault holds the necessary key for unlocking the Ansible vault and the DO API token.
 
-    Use `./ansible/load_secrets.sh` or another secure method to provide the `DO_API_TOKEN` var. 
+    Use `./ansible/scripts/load_secrets.sh` or another secure method to provide the `DO_API_TOKEN` var. 
 
 
 2. **Harden Servers and Set Passwords**
     ```
-    ansible-playbook -i inventory/ ./playbooks/firstrun.yml --become-password-file ./deploy-pass.sh --connection-password-file ./deploy-pass.sh --vault-password-file ./vault-pass.sh
+    ansible-playbook -i inventory/digital_ocean.yml firstrun.yml --become-password-file ./scripts/deploy-pass.sh --vault-password-file ./scripts/vault-pass.sh
     ```
 
 3. **Configure Systems**

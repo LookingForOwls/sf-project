@@ -1,19 +1,31 @@
 ---
-# Setup Nimbus on CL VM using Consensys role
-# Default to one version back for upgrade testing
+# Setup attached volumes on clients
+- name: Setup volumes
+  gather_facts: false
+  become: true
+  hosts: holesky-cl01,holesky-el01
+  roles:
+    - blockstorage
+
+# Setup Nimbus on CL VM using a role that includes consensys.nimbus
 - name: Setup Nimbus
   gather_facts: true
+  become: true
   hosts: holesky-cl01
   roles:
-    - consensys.nimbus
+    - nimbus
   vars:
-    nimbus_version: v24.6.0
-    nimbus_git_hash: 7d00786
+    nimbus_version: v24.7.0
+    nimbus_git_hash: 99f657e5
     nimbus_network: holesky
-    nimbus_data_dir:
+    nimbus_user: nimbus
+    nimbus_data_dir: /mnt/data/nimbus
+    nimbus_jwt_auth_file: /etc/jwt-secret-ansible.hex
+    # Set to holesky-el01 private ip from the inventory hostvars
+    nimbus_execution_urls: "{{ hostvars['holesky-el01']['do_networks']['v4'] | selectattr('type', 'equalto', 'private') | map(attribute='ip_address') | first }}"
+    nimbus_host_ip: "{{ ansible_host }}"
 
-# Setup Nethermind on EL VM using local role
-# Default to one version back for upgrade testing
+# Setup Nethermind on EL VM using personally created role
 - name: Setup Nethermind
   gather_facts: true
   become: true
@@ -23,3 +35,8 @@
   vars:
     nm_version: 1.27.1
     nm_git_hash: d2d5d4ae
+    nm_network: holesky
+    nm_user: nethermind
+    nm_data_dir: /mnt/data/nethermind
+    nm_config_dir: /etc/nethermind
+    nm_dir: /opt/nethermind

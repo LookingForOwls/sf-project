@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: 2022 Demerzel Solutions Limited
+# SPDX-License-Identifier: LGPL-3.0-only
+
+[Unit]
+Description=Nethermind Node
+Documentation=https://docs.nethermind.io
+After=network.target
+
+[Service]
+User={{ nm_user }}
+Group={{ nm_user }}
+WorkingDirectory={{ nm_dir }}
+ExecStart={{ nm_dir }}/current/Nethermind.Runner --datadir {{ nm_data_dir }} \
+                                                 --config {{ nm_network }} \
+                                                 --JsonRpc.JwtSecretFile {{ nm_dir }}/keystore/jwt-secret-ansible.hex \
+                                                 --JsonRpc.Enabled true \
+                                                 --JsonRpc.EngineHost {{  ansible_eth1.ipv4.address }} \
+                                                 --JsonRpc.EnginePort {{ nm_consensus_port }} \
+                                                 --JsonRpc.Host {{  ansible_eth1.ipv4.address }} \
+                                                 --JsonRpc.Port {{ nm_rpc_port }}                                        
+Restart=on-failure
+LimitNOFILE=1000000
+
+[Install]
+WantedBy=default.target
