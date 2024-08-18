@@ -1,0 +1,19 @@
+---
+# Nimbus Client Version
+nimbus_version: v24.6.0
+nimbus_git_hash: 7d00786d
+
+# Nimbus Vars
+nimbus_network: holesky
+nimbus_user: nimbus
+nimbus_data_dir: /mnt/data/nimbus
+nimbus_jwt_auth_file: /etc/jwt-secret-ansible.hex
+nimbus_host_ip: "{{ ansible_host }}"
+# Set to holesky-el01 private ip from the inventory hostvars
+nimbus_execution_urls: >-
+  http://{{
+    hostvars['holesky-el01']['do_networks']['v4'] | 
+    selectattr('type', 'equalto', 'private') | 
+    map(attribute='ip_address') | 
+    first
+  }}:{{ nm_consensus_port }}

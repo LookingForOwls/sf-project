@@ -16,7 +16,7 @@ ExecStart={{ nm_dir }}/current/Nethermind.Runner --datadir {{ nm_data_dir }} \
                                                  --JsonRpc.Enabled true \
                                                  --JsonRpc.EngineHost {{  ansible_eth1.ipv4.address }} \
                                                  --JsonRpc.EnginePort {{ nm_consensus_port }} \
-                                                 --JsonRpc.Host {{  ansible_eth1.ipv4.address }} \
+                                                 --JsonRpc.Host 127.0.0.1 \
                                                  --JsonRpc.Port {{ nm_rpc_port }}                                        
 Restart=on-failure
 LimitNOFILE=1000000

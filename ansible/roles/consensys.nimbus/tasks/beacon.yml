@@ -1,93 +1,74 @@
 ---
 - name: Add basics to the beacon cmdline_args
-  set_fact:
+  ansible.builtin.set_fact:
     nimbus_beacon_cmdline_args: >
-      {{nimbus_beacon_cmdline_args}}
-      --network={{nimbus_network}}
-      --data-dir={{nimbus_data_dir}}
-      --log-format=json
-      --log-level={{nimbus_log_level}}
-      --log-file={{nimbus_log_dir}}/beacon.log
-      --jwt-secret={{nimbus_jwt_auth_file}}
-      --web3-url={{nimbus_execution_urls}}
-      --non-interactive
-      --status-bar=false
-      --doppelganger-detection
+      {{ nimbus_beacon_cmdline_args }} --network={{ nimbus_network }} --data-dir={{ nimbus_data_dir }} --log-format=json --log-level={{ nimbus_log_level }} --log-file={{
+      nimbus_log_dir }}/beacon.log --jwt-secret={{ nimbus_jwt_auth_file }} --web3-url={{ nimbus_execution_urls }} --non-interactive --status-bar=false --doppelganger-detection
       --validator-monitor-auto
 
 - name: Add p2p settings to the beacon cmdline_args
-  set_fact:
+  ansible.builtin.set_fact:
     nimbus_beacon_cmdline_args: >
-      {{nimbus_beacon_cmdline_args}}
-      --tcp-port={{nimbus_p2p_port}}
-      --udp-port={{nimbus_p2p_port}}
+      {{ nimbus_beacon_cmdline_args }} --tcp-port={{ nimbus_p2p_port }} --udp-port={{ nimbus_p2p_port }}
   when: nimbus_p2p_enabled|bool == True
 
 - name: Add metrics to the beacon cmdline_args
-  set_fact:
+  ansible.builtin.set_fact:
     nimbus_beacon_cmdline_args: >
-      {{nimbus_beacon_cmdline_args}}
-      --metrics
-      --metrics-address='{{ nimbus_metrics_interface}}'
-      --metrics-port={{ nimbus_metrics_port}}
+      {{ nimbus_beacon_cmdline_args }} --metrics --metrics-address='{{ nimbus_metrics_interface }}' --metrics-port={{ nimbus_metrics_port }}
   when: nimbus_metrics_enabled|bool == True
 
 - name: Add RPC to the beacon cmdline_args
-  set_fact:
+  ansible.builtin.set_fact:
     nimbus_beacon_cmdline_args: >
-      {{nimbus_beacon_cmdline_args}}
-      --rest                    
-      --rest-address='{{nimbus_rest_interface}}'
-      --rest-port={{nimbus_rest_port}}
-      --rest-allow-origin={{nimbus_rest_cors}}
+      {{ nimbus_beacon_cmdline_args }} --rest                     --rest-address='{{ nimbus_rest_interface }}' --rest-port={{ nimbus_rest_port }} --rest-allow-origin={{
+      nimbus_rest_cors }}
   when: nimbus_rest_enabled|bool == True
 
 - name: Add fee receipt to the beacon cmdline_args
-  set_fact:
+  ansible.builtin.set_fact:
     nimbus_beacon_cmdline_args: >
-      {{nimbus_beacon_cmdline_args}}
-      --suggested-fee-recipient={{nimbus_default_fee_recipient}}
+      {{ nimbus_beacon_cmdline_args }} --suggested-fee-recipient={{ nimbus_default_fee_recipient }}
   when: nimbus_default_fee_recipient != ""
 
 - name: Add custom cli args if provided
-  set_fact:
+  ansible.builtin.set_fact:
     nimbus_beacon_cmdline_args: >
-      {{nimbus_beacon_cmdline_args}}
-      {{ nimbus_beacon_custom_cmdline_args }}
+      {{ nimbus_beacon_cmdline_args }} {{ nimbus_beacon_custom_cmdline_args }}
   when: nimbus_beacon_custom_cmdline_args != ""
 
 - name: Sanitize beacon cmdline_args
-  set_fact:
+  ansible.builtin.set_fact:
     nimbus_beacon_cmdline_args: "{{nimbus_beacon_cmdline_args | replace('\n', '') | replace('\"', '')}}"
 
 - name: Show beacon cmdline_args
-  debug:
-    msg: "{{nimbus_beacon_cmdline_args}}"
+  ansible.builtin.debug:
+    msg: "{{ nimbus_beacon_cmdline_args }}"
 
 - name: Create nimbus-beacon systemd service
-  template:
-    src: "nimbus-beacon.service.j2"
+  ansible.builtin.template:
+    src: nimbus-beacon.service.j2
     dest: "{{ nimbus_systemd_dir }}/nimbus-beacon.service"
-    owner: "root"
-    group: "root"
+    owner: root
+    group: root
   become: true
   register: beacon_systemd_file
 
 - name: Set updated optionally to trigger a systemd restart at the end
-  set_fact:
+  ansible.builtin.set_fact:
     nimbus_state_updates_beacon: "{{ nimbus_state_updates_beacon + ['nimbus.beacon_systemd_file'] }}"
   when: beacon_systemd_file is changed
 
 - name: Reload systemd to reread configs
-  systemd:
-    daemon_reload: yes
+  ansible.builtin.systemd:
+    daemon_reload: true
   become: true
   when: beacon_systemd_file is changed
 
 - name: Enable and start nimbus-beacon service
-  systemd:
+  ansible.builtin.systemd:
     name: nimbus-beacon
     state: "{{ nimbus_systemd_state }}"
     enabled: true
   become: true
-  when: nimbus_state_updates_beacon|length > 0 
+  when: nimbus_state_updates_beacon|length > 0
