@@ -22,8 +22,9 @@
     nimbus_data_dir: /mnt/data/nimbus
     nimbus_jwt_auth_file: /etc/jwt-secret-ansible.hex
     # Set to holesky-el01 private ip from the inventory hostvars
-    nimbus_execution_urls: "{{ hostvars['holesky-el01']['do_networks']['v4'] | selectattr('type', 'equalto', 'private') | map(attribute='ip_address') | first }}"
+    nimbus_execution_urls: "http://{{ hostvars['holesky-el01']['do_networks']['v4'] | selectattr('type', 'equalto', 'private') | map(attribute='ip_address') | first }}:{{nm_consensus_port}}"
     nimbus_host_ip: "{{ ansible_host }}"
+  tags: nimbus
 
 # Setup Nethermind on EL VM using personally created role
 - name: Setup Nethermind
@@ -40,3 +41,4 @@
     nm_data_dir: /mnt/data/nethermind
     nm_config_dir: /etc/nethermind
     nm_dir: /opt/nethermind
+  tags: netermind
