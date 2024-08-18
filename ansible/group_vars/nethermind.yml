@@ -1,0 +1,11 @@
+# Nethermind Client Version
+nm_version: 1.27.1
+nm_git_hash: d2d5d4ae
+
+# Nethermind Vars
+nm_network: holesky
+nm_user: nethermind
+nm_data_dir: /mnt/data/nethermind
+nm_config_dir: /etc/nethermind
+nm_dir: /opt/nethermind
+nm_rpc_port: 8545

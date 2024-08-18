@@ -25,7 +25,7 @@ resource "digitalocean_project" "sf_project" {
 # Tags
 variable "tags" {
   type    = set(string)
-  default = ["sf", "holesky", "holesky-el", "holesky-cl"]
+  default = ["sf", "holesky", "holesky-el", "holesky-cl", "nimbus", "nethermind"]
 }
 
 resource "digitalocean_tag" "tags" {
@@ -50,7 +50,8 @@ module "holesky_cl_droplet" {
   tag_ids = [
     digitalocean_tag.tags["sf"].id,
     digitalocean_tag.tags["holesky"].id,
-    digitalocean_tag.tags["holesky-cl"].id
+    digitalocean_tag.tags["holesky-cl"].id,
+    digitalocean_tag.tags["nimbus"].id
   ]
   # SSH
   lfo_ssh_key_id = data.digitalocean_ssh_key.lfo_ssh_key.public_key
@@ -67,7 +68,8 @@ module "holesky_el_droplet" {
   tag_ids = [
     digitalocean_tag.tags["sf"].id,
     digitalocean_tag.tags["holesky"].id,
-    digitalocean_tag.tags["holesky-el"].id
+    digitalocean_tag.tags["holesky-el"].id,
+    digitalocean_tag.tags["nethermind"].id
   ]
   # SSH
   lfo_ssh_key_id = data.digitalocean_ssh_key.lfo_ssh_key.public_key
