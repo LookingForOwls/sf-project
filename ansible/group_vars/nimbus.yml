@@ -1,7 +1,7 @@
 ---
 # Nimbus Client Version
-nimbus_version: v24.6.0
-nimbus_git_hash: 7d00786d
+nimbus_version: v24.7.0
+nimbus_git_hash: 99f657e5
 
 # Nimbus Vars
 nimbus_network: holesky

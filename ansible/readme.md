@@ -1,52 +1,87 @@
 # SF Ansible
 
+This README provides an overview of the Ansible configuration for deploying and managing Ethereum clients on Digital Ocean.
+
+## Table of Contents
+
+1. [Project Structure](#project-structure)
+2. [Prerequisites](#prerequisites)
+3. [Setup and Deployment](#setup-and-deployment)
+4. [Client Upgrades](#client-upgrades)
+
 ## Project Structure
 
-- `ansible/`
-  - `ansible.cfg`: Ansible configuration file.
-  - `main.yml`: Primary playbook for all ansible tasks.
-  - `inventory/`: Hosts inventory files, `digital_ocean.yml` creates dynamic inventory using DO API.
-  - `load_secrets.sh`: Script to load DO API token as env variable for `digital_ocean.yml`.
-  - `requirements.yml`: Lists external Ansible roles or collections to be installed.
-  - `roles/`: Custom Ansible roles for configuring servers.
-    - Each role (e.g., `common`, `nethermind`, `nimbus`) contains:
-      - `files/`: Role-specific files.
-      - `tasks/`: Main tasks for the role.
-      - `vars/`: Variables specific to the role.
-      - `handlers/` and `templates/`: (In certain roles) Handlers and Jinja2 templates for configuration files.
-  - `vault-pass.sh`: Script to retrieve the Ansible Vault password using `pass`.
+```
+ansible/
+├── ansible.cfg
+├── main.yml
+├── firstrun.yml
+├── update-clients.yml
+├── inventory/
+├── group_vars/
+├── playbooks/
+├── scripts/
+├── requirements.yml
+└── roles/
+    ├── blockstorage/
+    ├── common/
+    ├── consensys.nimbus/
+    ├── nethermind/
+    └── nimbus/
+```
+
+Key components:
+- `main.yml`: Primary playbook for client setup tasks
+- `firstrun.yml`: Playbook for initial setup tasks
+- `update-clients.yml`: Playbook for updating client software
+- `inventory/`: Dynamic inventory for Digital Ocean
+- `roles/`: Custom Ansible roles for server configuration
 
 ## Prerequisites
 
-- Ansible installed locally.
-- Access to `pass` vault containing necessary secrets.
-- SSH keys added to the necessary droplets.
+- Ansible installed locally
+- Access to `pass` vault containing necessary secrets
+- SSH keys added to the necessary droplets
 
 ## Setup and Deployment
 
 > [!IMPORTANT]  
 > Newly created systems must be provisioned in two steps to properly setup passwords from Terraform defaults.
 
+### 1. Setup
+
+The `pass` vault holds the necessary key for unlocking the Ansible vault and the DO API token.
+
+```bash
+source ./ansible/scripts/load_secrets.sh
+```
+
+### 2. Initial Setup and Set Passwords
+
+Run this playbook once after initial Terraform provisioning:
+
+```bash
+ansible-playbook -i inventory/digital_ocean.yml firstrun.yml --become-password-file ./scripts/deploy-pass.sh --vault-password-file ./scripts/vault-pass.sh
+```
+
+### 3. Configure Systems
+
+Install and configure the Nethermind and Nimbus clients:
+
+```bash
+ansible-playbook -i inventory/digital_ocean.yml main.yml --ask-become-pass --vault-password-file ./scripts/vault-pass.sh
+```
 > [!NOTE]  
-> Hardening leverages [ansible-collection-hardening](https://github.com/dev-sec/ansible-collection-hardening/tree/master/roles/os_hardening) and takes over 1 hour.
+> All install variables can be found in `group_vars`. Verify the default client versions are correct.
 
-1. **Setup**
+## Client Upgrades
 
-    The `pass` vault holds the necessary key for unlocking the Ansible vault and the DO API token.
+Update client software and service files using the `update-clients.yml` playbook:
 
-    Use `./ansible/scripts/load_secrets.sh` or another secure method to provide the `DO_API_TOKEN` var. 
+```bash
+ansible-playbook -i inventory/digital_ocean.yml update-clients.yml --ask-become-pass --vault-password-file ./scripts/vault-pass.sh
+```
 
-
-2. **Harden Servers and Set Passwords**
-    ```
-    ansible-playbook -i inventory/digital_ocean.yml firstrun.yml --become-password-file ./scripts/deploy-pass.sh --vault-password-file ./scripts/vault-pass.sh
-    ```
-
-3. **Configure Systems**
-    ```
-     ansible-playbook -i inventory/digital_ocean.yml ./playbooks/main.yml --ask-become-pass --vault-password-file ./vault-pass.sh
-    ```
-
-## Security Considerations
-
-Ensure all Ansible secrets are encrypted using `ansible-vault`. 
+This playbook:
+- Updates clients only if necessary based on `nm_version` and `nimbus_version` variables
+- Uses the JSON-RPC API to verify the client is UP and the desired version is running
