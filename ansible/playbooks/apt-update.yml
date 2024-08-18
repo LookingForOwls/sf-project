@@ -1,3 +1,4 @@
+---
 - name: Update all installed packages (dist upgrade)
   gather_facts: true
   become: true

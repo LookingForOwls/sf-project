@@ -5,4 +5,3 @@ nm_consensus_port: 8551
 # GPG key fingerprints for package verification
 key:
   nethermind_mateusz: EECCEA1473108E3222D76722D39BE1DDCB6DA407
-

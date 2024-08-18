@@ -1,6 +1,7 @@
+---
 # Nethermind Client Version
-nm_version: 1.27.1
-nm_git_hash: d2d5d4ae
+nm_version: 1.28.0
+nm_git_hash: 9c4816c2
 
 # Nethermind Vars
 nm_network: holesky

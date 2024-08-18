@@ -1,0 +1,85 @@
+---
+# Importing the handlers and only running the install task.
+- name: Update Nethermind
+  gather_facts: true
+  become: true
+  hosts: nethermind
+  tags: nethermind
+  tasks:
+    # Only run necessary install and service tasks from Nethermind role
+    - name: Update Nethermind
+      ansible.builtin.import_role:
+        name: nethermind
+        tasks_from: install
+
+    # Use API to verify service is running and version is correct
+    - name: Pause for service to stabilize
+      ansible.builtin.pause:
+        seconds: 10
+      when: not ansible_check_mode
+
+    - name: Verify Nethermind API up and get version
+      ansible.builtin.uri:
+        url: http://127.0.0.1:8545
+        method: POST
+        body_format: json
+        body:
+          jsonrpc: "2.0"
+          id: 0
+          method: web3_clientVersion
+          params: []
+        return_content: true
+      register: nethermind_response
+      until: nethermind_response.status == 200
+      retries: 5
+      delay: 5
+      failed_when: nethermind_response.status != 200
+
+    - name: Extract Nethermind version
+      ansible.builtin.set_fact:
+        installed_version: "{{ nethermind_response.json.result.split('/')[1].split('+')[0] | regex_replace('^v', '') }}"
+
+    - name: Compare Nethermind versions
+      ansible.builtin.assert:
+        that:
+          - installed_version == nm_version
+        success_msg: "Nethermind version matches expected version: {{ nm_version }}"
+        fail_msg: "Nethermind version mismatch. Installed: {{ installed_version }}, Expected: {{ nm_version }}"
+
+- name: Update Nimbus
+  gather_facts: true
+  become: true
+  hosts: nimbus
+  tags: nimbus
+  # Running the entire Consensys Nimbus role since most task ymls are interrelated.
+  roles:
+    - consensys.nimbus
+
+  # Use API to verify service is running and version is correct
+  tasks:
+    - name: Pause for service to stabilize
+      ansible.builtin.pause:
+        seconds: 10
+      when: not ansible_check_mode
+
+    - name: Verify Nimbus API up and get version
+      ansible.builtin.uri:
+        url: http://127.0.0.1:5051/eth/v1/node/version
+        method: GET
+        return_content: true
+      register: nimbus_response
+      until: nimbus_response.status == 200
+      retries: 5
+      delay: 5
+      failed_when: nimbus_response.status != 200
+
+    - name: Extract Nimbus version
+      ansible.builtin.set_fact:
+        installed_version: "{{ nimbus_response.json.data.version.split('/')[1].split('-')[0] }}"
+
+    - name: Compare Nimbus versions
+      ansible.builtin.assert:
+        that:
+          - installed_version == nimbus_version
+        success_msg: "Nimbus version matches expected version: {{ nimbus_version }}"
+        fail_msg: "Nimbus version mismatch. Installed: {{ installed_version }}, Expected: {{ nimbus_version }}"
